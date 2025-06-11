@@ -93,9 +93,20 @@ namespace Anthropic.SDK.Messaging
 
             foreach (ChatMessage message in messages)
             {
+                CacheControl cacheControl = null;
+                if (
+                    message.AdditionalProperties is not null
+                    && message.AdditionalProperties.ContainsKey("cache_control")
+                    && message.AdditionalProperties["cache_control"] is CacheControlType cct
+                )
+                {
+                    cacheControl = new CacheControl { Type = cct };
+                }
                 if (message.Role == ChatRole.System)
                 {
-                    (parameters.System ??= []).Add(new SystemMessage(string.Concat(message.Contents.OfType<Microsoft.Extensions.AI.TextContent>())));
+                     (parameters.System ??= []).Add(
+                        new SystemMessage(string.Concat(message.Contents.OfType<Microsoft.Extensions.AI.TextContent>()), cacheControl)
+                    );
                 }
                 else
                 {
